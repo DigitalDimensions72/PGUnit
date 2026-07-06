@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGUnit User Manual</title>
+    <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <div class="logo-area">
+                <img src="Images/PGUnit.png" alt="PGUnit Logo">
+            </div>
+            <div class="header-title">
+                <h1>PGUnit User Manual</h1>
+                <p>Unit Testing for PostgreSQL</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="download-box">
+            <div class="download-text">
+                <h2>Get PGUnit Source Code</h2>
+                <p>Download production source files, utilities, and sample code directly to your local development workspace.</p>
+            </div>
+            <a href="#" class="download-btn">Download Repository</a>
+        </div>
+
+        <nav class="index-box" id="index">
+            <h2>Manual Index</h2>
+            <ol class="index-list">
+                <li><a href="#introduction">Introduction to PGUnit</a></li>
+                <li><a href="#installation">Installing PGUnit</a></li>
+                <li><a href="#structure">Explaining the Structure of a PGUnit Test Case</a></li>
+                <li><a href="#running">Running PGUnit Tests</a></li>
+                <li><a href="#results">Reading PGUnit Results</a></li>
+                <li><a href="#utilities">PGUnit Utility Functions</a></li>
+                <li><a href="#developer">Contact the Developer</a></li>
+            </ol>
+        </nav>
+
+        <section id="introduction">
+            <h2>1. Introduction to PGUnit</h2>
+            <p>I developed PGUnit as a unit testing tool that is simple to install and use in PostgreSQL. It consists of a set of database functions designed to help developers validate database logic efficiently.</p>
+            
+            <h3>Files for PGUnit</h3>
+            <p>The system includes the following core and supporting files:</p>
+            <ul>
+                <li><strong>PGUnit.SQL</strong>: The core source code for the system.</li>
+                <li><strong>PGUnitUtils.sql</strong>: Utility functions for PGUnit.</li>
+                <li><strong>Sample/StudentsDatabase.sql</strong>: The test database used to demonstrate how the system works.</li>
+                <li><strong>Sample/StudentsDatabaseTestCases.sql</strong>: The test cases for the student database.</li>
+                <li><strong>Sample/PGUnitTests.sql</strong>: The test cases used to test PGUnit itself.</li>
+            </ul>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="installation">
+            <h2>2. Installing PGUnit</h2>
+            <p>To install PGUnit, execute the following steps:</p>
+            <ol>
+                <li>Open the file called <code>PGUnit.SQL</code> in an editor like Notepad.</li>
+                <li>Copy all of the code.</li>
+                <li>Open your preferred <strong>SQL Client</strong>.</li>
+                <li>Open an SQL Window.</li>
+                <li>Paste the PGUnit code into the SQL Window.</li>
+                <li>Run the PGUnit source code.</li>
+            </ol>
+            <p>Upon successful execution, you will see a query completion notice in the messages pane. Refreshing your SQL Client object browser will reveal a brand-new schema named pgunit.</p>
+
+            <h3>Installing PGUnit Examples &amp; Samples</h3>
+            <p>To deploy the provided examples, sample testing environments, and baseline verifications, follow the instructions below for each specific sample file:</p>
+            
+            <h4>1. StudentsDatabase.sql</h4>
+            <p><strong>Purpose:</strong> This file builds the core schema, mock tables, and business logic for a simulated student database. It acts as the reference codebase used to safely demonstrate how PGUnit operates.</p>
+            <p><strong>Installation:</strong> Open <code>Sample/StudentsDatabase.sql</code> in Notepad, copy all of the code, paste it into an open SQL Client window, and execute it.</p>
+            
+            <h4>2. StudentsDatabaseTestCases.sql</h4>
+            <p><strong>Purpose:</strong> This script installs the suite of functional test cases for the sample student database. It provides real-world examples of how to construct test functions, write assertions, and properly organise test blocks using the PGUnit markup syntax.</p>
+            <p><strong>Installation:</strong> Open <code>Sample/StudentsDatabaseTestCases.sql</code> in Notepad, copy the entire block of code, paste it into your SQL Client window, and run it to install the test functions.</p>
+            
+            <h4>3. PGUnitTests.sql</h4>
+            <p><strong>Purpose:</strong> This script contains the internal test suite used to test PGUnit itself. The tests are run directly against the PGUnit code, serving as a comprehensive verification layer to guarantee the framework is operating correctly.</p>
+            <p><strong>Installation:</strong> Open <code>Sample/PGUnitTests.sql</code> in Notepad, copy all of the code, paste it into an SQL window within your SQL Client, and execute it.</p>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="structure">
+            <h2>3. Explaining the Structure of a PGUnit Test Case</h2>
+            <p>All PGUnit unit tests follow a strictly defined baseline structure. The name of the test function <strong>must</strong> start with <code>test_</code> and follow the structure outlined below:</p>
+
+<pre><code>CREATE OR REPLACE FUNCTION pgunittests.test_one_setup_no_test_sections()
+RETURNS TABLE(code VARCHAR) AS
+$body$
+    SELECT pgunit.testcase($$
+        --@variables
+        --@Rollback(TRUE/FALSE/T/F/YES/NO/Y/N)
+        --@ExitOnFailFirstTest(TRUE/FALSE/T/F/YES/NO/Y/N)
+        --@setup([description=&lt;a description of the test&gt;])
+        --@test(description=&lt;a description of the test&gt;)
+    $$);
+$body$
+LANGUAGE sql;</code></pre>
+
+            <h3>The Importance of <code>SELECT pgunit.testcase($$...$$);</code></h3>
+            <div class="accent-block">
+                <p>Calling the <code>pgunit.testcase</code> wrapper with dollar-quoted strings is a crucial structural requirement. This block allows PGUnit to successfully extract, parse, and evaluate the specific blocks that make up your test cases.</p>
+            </div>
+
+            <h3>Test Markup and Sections</h3>
+            <p>PGUnit has a specific markup that it uses to identify sections of your test cases:</p>
+            <ul>
+                <li><strong><code>--@variables</code></strong>: If your test code uses variables, define those variables inside this section. This tag can only appear <strong>once</strong> per test function.</li>
+
+                <li><strong><code>--@Rollback(TRUE/FALSE/T/F/YES/NO/Y/N)</code></strong>: This tells PGUnit if it must rollback data modifications applied during test execution. If set to <code>TRUE</code>, <code>T</code>, <code>YES</code>, or <code>Y</code>, the system automatically rolls back every modification made during the execution of the test cases in the function. Conversely, if configured to <code>FALSE</code>, <code>F</code>, <code>NO</code>, or <code>N</code>, modifications persist. If omitted entirely, it defaults to <strong><code>TRUE</code></strong>.This tag can only appear <strong>once</strong> per test function.</li>
+                
+                <li><strong><code>--@ExitOnFailFirstTest(TRUE/FALSE/T/F/YES/NO/Y/N)</code></strong>: Controls abort mechanics when multiple consecutive test sections reside in a single test function. If it is set to  <code>TRUE</code>, <code>T</code>, <code>YES</code>, or <code>Y</code>, execution terminates the moment a test case in the function fails. If <code>FALSE</code>, <code>F</code>, <code>NO</code>, or <code>N</code> the tests continue to  execute regardless of early validation errors. If unspecified, it defaults to <strong><code>FALSE</code></strong>. This tag can only appear <strong>once</strong> per test function.</li>
+                
+                <li><strong><code>--@setup([description=&lt;a description of the test&gt;])</code></strong>: Contains all of the setup code that your test cases require. The <code>description</code> parameter is entirely optional. This tag can only appear <strong>once</strong> per test function.</li>
+                
+                <li><strong><code>--@test(description=&lt;a description of the test&gt;)</code></strong>: Defines Test case. Multiple test blocks may be specified in a test function to cleanly support test suites. Every test block <strong>must</strong> provide a <code>description</code> and you must supply a minimum of one active test section per test function.</li>
+            </ul>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="running">
+            <h2>4. Running PGUnit Tests</h2>
+            <p>PGUnit uses the <code>pgunit.testrunner</code> function to execute test functions. This locates test functions, executes them and formats test results to closely replicate traditional XUnit layout conventions.</p>
+            
+            <h3>Function Parameters</h3>
+            <ul>
+                <li><strong>Schema Name</strong> : The specific database schema containing target test functions.</li>
+                <li><strong>Test Case Function Name</strong> : The exact target function name to execute. Passing only the schema name automatically executes all tests functions discovered in the specified schema.</li>
+            </ul>
+
+            <h3>Example 1: Running a Single Test</h3>
+            <p>Run this statement directly inside your SQL Client to execute a specific test function:</p>
+<pre><code>SELECT * FROM pgunit.testrunner('pgunittraining', 'test_boundary_pass_result');</code></pre>
+
+            <h3>Example 2: Running Multiple Tests</h3>
+            <p>Execute this statement to scan, collect, and automatically run every test case function declared within the specified schema:</p>
+<pre><code>SELECT * FROM pgunit.testrunner('pgunittraining');</code></pre>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="results">
+            <h2>5. Reading PGUnit Results</h2>
+            <p>PGUnit provides two sets of test result information to your SQL Client:</p>
+            <ol>
+                <li><strong>The Test Results Table</strong>: This lists the number of test functions executed, the total number of test cases that are available, the number of test cases that were not executed and the number of test cases that passed/failed.</li>
+                <li><strong>The Messages/Notice Information</strong>: Provides more information about the test cases that were executed.</li>
+            </ol>
+
+            <h3>The Test Results Table</h3>
+            <p>The Test Results Table looks like this:</p>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>test_case_functions</th>
+                            <th>tests_cases</th>
+                            <th>tests_cases_not_run</th>
+                            <th>passed</th>
+                            <th>failed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>15</td>
+                            <td>36</td>
+                            <td>0</td>
+                            <td>33</td>
+                            <td>3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <ul>
+                <li><strong><code>test_case_functions</code></strong>: The number of test case functions executed.</li>
+                <li><strong><code>tests_cases</code></strong>: The total number of test cases contained across those functions.</li>
+                <li><strong><code>tests_cases_not_run</code></strong>: The total number of test cases that haven't been run (for instance, skipped due to exit abort flags).</li>
+                <li><strong><code>passed</code></strong>: The number of test cases that have successfully passed validation.</li>
+                <li><strong><code>failed</code></strong>: The number of test cases that have failed validation.</li>
+            </ul>
+
+            <h3>The Messages/Notice Information</h3>
+            <p>The detailed information about test case execution looks like this:</p>
+<pre><code>postgres=# select * from pgunit.testrunner('pgunittraining');
+NOTICE:  PGUnit Version 1.0 by John Clarke
+NOTICE:  Test Function : pgunittraining.test_fail_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns a pass grade - OK (00:00:00.001 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_boundary_pass_result
+NOTICE:  Test Cases in Function : 6 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns FAIL for a grade of 39 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 40 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 41 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 58 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 59 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 60 - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_pass_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns a pass grade - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_merit_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns a merit grade - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_distinction_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns a distinction grade - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_badgrade1_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade traps an invalid result of -1 - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_badgrade2_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST - Check that pgunittraining.getgrade traps an invalid result of -1 - Failed (00:00:00 ms)
+NOTICE:  ERROR : TEST Section Failed : The Result is not VOID
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_badgrade3_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade traps an invalid result of 101 - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_badgrade4_result
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  TEST - Check that pgunittraining.getgrade traps an invalid result of 101 - Failed (00:00:00 ms)
+NOTICE:  ERROR : TEST Section Failed : The Result is not VOID
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_boundary_fail_result
+NOTICE:  Test Cases in Function : 6 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns VOID for a grade of -1 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns FAIL for a grade of 0 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns FAIL for a grade of 1 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns FAIL for a grade of 38 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns FAIL for a grade of 39 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 40 - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_boundary_merit_result
+NOTICE:  Test Cases in Function : 6 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns PASS for a grade of 59 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 60 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 61 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 78 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 79 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns DISTINCTION for a grade of 80 - OK (00:00:00 ms)
+------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_boundary_distinction_result
+NOTICE:  Test Cases in Function : 6 tests
+NOTICE:  TEST : Check that pgunittraining.getgrade returns MERIT for a grade of 79 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns DISTINCTION for a grade of 80 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns DISTINCTION for a grade of 81 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns DISTINCTION for a grade of 99 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns DISTINCTION for a grade of 100 - OK (00:00:00 ms)
+NOTICE:  TEST : Check that pgunittraining.getgrade returns VOID for a grade of 101 - OK (00:00:00 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_check_student_name
+NOTICE:  Test Cases in Function : 2 tests
+NOTICE:  TEST : Check that the firstname for the student with the id of 1 is Ila - OK (00:00:00.001 ms)
+NOTICE:  TEST : Check that the surname for the student with the id of 1 is Barela - OK (00:00:00 ms)
+------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_check_studentsgrades1
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  SETUP : Create the expected results table - OK (00:00:00.029 ms)
+NOTICE:  TEST : Check that the expected_studentsgrades table matches the actual_studentsgrades table - OK (00:00:00.01 ms)
+NOTICE:  ------------------------------------------------------
+NOTICE:  Test Function : pgunittraining.test_check_studentsgrades2
+NOTICE:  Test Cases in Function : 1 tests
+NOTICE:  SETUP : Create the expected results table - OK (00:00:00.013 ms)
+NOTICE:  TEST - Check that the expected_studentsgrades table matches the actual_studentsgrades table - Failed (00:00:00.004 ms)
+NOTICE:  ERROR : TEST Section Failed : Data mismatch detected: Tables temp.expected_studentsgrades and temp.actual_studentsgrades are not identical. Found 1 differing record(s).
+NOTICE:  ======================================================
+NOTICE:  Total Execution Time: 00:00:00.304
+NOTICE:  Total Number of functions with test cases : 15
+NOTICE:  Total Number of Tests : 36
+NOTICE:  Total Number of Tests not executed : 0
+NOTICE:  Passed : 33
+NOTICE:  Failed : 3</code></pre>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="utilities">
+            <h2>6. PGUnit Utility Functions</h2>
+            <p>The following utility function is used to handle table comparisons.</p>
+            
+            <h3><code>PGUnitUtils.compare_tables</code></h3>
+            <p><strong>Description:</strong> Check to see if two tables contain matching content.</p>
+            
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>in_expected</code> : The name of the table containing the expected values.</li>
+                <li><code>in_actual</code> : The name of the table containing the actual values.</li>
+            </ul>
+
+            <p><strong>Example Syntax:</strong></p>
+<pre><code>SELECT * FROM PGUnitUtils.compare_tables('temp.expected_studentsgrades', 'temp.actual_studentsgrades');</code></pre>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+        <section id="developer">
+            <h2>7. Contact the Developer</h2>
+            <p>If you have questions, feedback, or require deployment support for PGUnit, feel free to get in touch:</p>
+            <ul class="contact-details">
+                <li><strong>Developer:</strong> John Clarke</li>
+                <li><strong>Email:</strong> <a href="mailto:jclarke@digitaldimensions.co.uk">jclarke@digitaldimensions.co.uk</a></li>
+                <li><strong>Website:</strong> <a href="https://www.digitaldimensions.co.uk" target="_blank" rel="noopener">www.digitaldimensions.co.uk</a></li>
+            </ul>
+            <div class="return-link-wrapper">
+                <a href="#index" class="back-to-index">&uarr; Return to Index</a>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>PGUnit &bull; Engineered for Database Integrity</p>
+    </footer>
+
+</body>
+</html>
