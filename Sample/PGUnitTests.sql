@@ -6,6 +6,61 @@
 -- Licensed under the PostgreSQL License. 
 -- See the LICENSE file in the project root for full license text.
 -- ====================================================================
+-- NOTES :
+--
+-- Expected Results 
+-- ----------------
+--
+-- test_case_functions : 76
+-- test_cases : 82
+-- test_cases_not_run : 9
+-- passed : 72
+-- failed : 1
+--
+-- Test Cases that need to fail
+-- ----------------------------
+--
+-- pgunittests.test_division_by_zero()
+--
+-- Test cases that failed validation  
+-- ---------------------------------
+--
+-- These are the test functions that are not run.  If the test functions have no test cases in them
+-- they don't count as test case functions
+--
+-- Total test cases not to be run : 9
+--
+-- Test Case Function                                                | Number of Test Cases in Function | Reason(s) for failure
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_zero_test_sections                               | 0                                | No @TEST sections found. A test suite must contain at least one test.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_one_setup_no_test_sections                       | 0                                | No @TEST sections found. A test suite must contain at least one test.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_two_setup_no_test_sections_no_parameters         | 0                                | Multiple @SETUP sections found. Only one allowed.
+--                                                                   |                                  | No @TEST sections found. A test suite must contain at least one test.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_two_setup_no_test_sections_and_parameters        | 0                                | Multiple @SETUP sections found. Only one allowed.
+--                                                                   |                                  | No @TEST sections found. A test suite must contain at least one test.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_tag_no_parameters                                | 1                                | One or more @TEST annotations are missing a description.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_parameters_no_description                        | 1                                | One or more @TEST annotations are missing a description.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_empty_description                           | 1                                | One or more @TEST annotations are missing a description.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_variables_no_parameters            | 1                                | Multiple @VARIABLES sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_variables_and_parameters           | 1                                | Multiple @VARIABLES sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_rollback_no_parameters             | 1                                | Multiple @ROLLBACK sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_rollback_and_parameters            | 1                                | Multiple @ROLLBACK sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_exitonfailfirsttest_no_parameters  | 1                                | Multiple @ExitOnFailFirstTest sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- pgunittests.test_with_multiple_exitonfailfirsttest_and_parameters | 1                                | Multiple @ExitOnFailFirstTest sections found. Only one allowed.
+-- ------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------
+-- 
 
 --- Create the Schema
 DROP SCHEMA if exists PGUnitTests CASCADE;
@@ -15,6 +70,18 @@ COMMENT ON SCHEMA PGUnitTests IS 'Tests for PGUnit';
 ---
 --- Utility Functions for PGUnit
 ---
+
+--- Function to collapse whitespace
+CREATE OR REPLACE FUNCTION pgunittests.collapse_whitespace(input_text TEXT)
+RETURNS TEXT
+AS
+$body$
+BEGIN
+    -- Replaces any sequence of whitespace (spaces, tabs, newlines, carriage returns) with a single space
+    RETURN trim(regexp_replace(input_text, '\s+', ' ', 'g'));
+END;
+$body$
+LANGUAGE plpgsql IMMUTABLE;
 
 --- Function to obtain the testable section of the testcode function
 CREATE OR REPLACE FUNCTION pgunittests.get_testable_generated_code(test_function_name TEXT)
@@ -39,6 +106,9 @@ BEGIN
 
     -- Trim any trailing/leading whitespaces or newlines if needed
     extracted_declaration_block := trim(extracted_declaration_block);
+
+    -- 3. Replace all whitespace longer than 1 character using the new helper function
+    extracted_declaration_block := pgunittests.collapse_whitespace(extracted_declaration_block);
 
     --- Return the extracted code 
     RETURN extracted_declaration_block;
@@ -816,6 +886,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_with_one_test_case');
         
@@ -896,6 +969,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_with_two_test_cases');
@@ -978,6 +1054,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test1');
         
@@ -1058,6 +1137,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test2');
@@ -1140,6 +1222,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test3');
         
@@ -1220,6 +1305,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test4');
@@ -1302,6 +1390,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test5');
         
@@ -1373,6 +1464,9 @@ EXCEPTION
         END;
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test6');
@@ -1446,6 +1540,9 @@ EXCEPTION
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test7');
         
@@ -1518,6 +1615,9 @@ EXCEPTION
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test8');
         
@@ -1589,6 +1689,9 @@ EXCEPTION
         END;
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_exitonfirst_test9');
@@ -1677,6 +1780,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup1');
         
@@ -1744,6 +1850,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup2');
@@ -1832,6 +1941,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_1');
         
@@ -1899,6 +2011,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_2');
@@ -1987,6 +2102,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_3');
         
@@ -2054,6 +2172,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_4');
@@ -2142,6 +2263,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_5');
         
@@ -2209,6 +2333,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_6');
@@ -2297,6 +2424,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_7');
         
@@ -2364,6 +2494,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_rollback_8');
@@ -2452,6 +2585,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_1');
         
@@ -2519,6 +2655,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_2');
@@ -2607,6 +2746,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_3');
         
@@ -2674,6 +2816,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_4');
@@ -2762,6 +2907,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_5');
         
@@ -2829,6 +2977,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_6');
@@ -2917,6 +3068,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_7');
         
@@ -2985,6 +3139,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_8');
         
@@ -3046,6 +3203,9 @@ BEGIN
 END;
 $EXPECTED$;
 
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
+
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_function_setup_prevent_rollback_9');
         
@@ -3103,6 +3263,9 @@ BEGIN
 
 END;
 $EXPECTED$;
+
+        -- Normalize whitespace in the expected code using the new function
+        expected_code = pgunittests.collapse_whitespace(expected_code);
 
         --- Get the actual generated code
         actual_test_code = pgunittests.get_testable_generated_code('pgunittests.test_division_by_zero');
